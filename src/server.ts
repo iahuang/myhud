@@ -13,7 +13,6 @@ export default class HUDServer {
 
     constructor() {
         this.app = expressWs(express()).app;
-        this.initRoutes();
         this.spotify = new SpotifyWebApi();
 
         // create a template config.json if one does not already exist
@@ -30,10 +29,15 @@ export default class HUDServer {
         // assuming config.json is present and correctly filled out
         let configContents = fs.readFileSync("config.json", "utf-8");
         this.config = JSON.parse(configContents);
+
+        this.initRoutes();
     }
 
     initRoutes() {
-        
+        // init static
+        this.app.use(express.static("public"));
+        // make client js scripts accessible
+        this.app.use("/client", express.static("build/client"));
     }
 
     listen() {

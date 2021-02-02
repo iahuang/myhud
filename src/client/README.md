@@ -1,0 +1,1 @@
+The files in this directory should be served to run the client
