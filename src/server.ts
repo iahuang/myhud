@@ -6,7 +6,6 @@ import ServerSettings from "./setting_definitions";
 import { networkInterfaces } from "os";
 
 namespace Network {
-    /* Utility functions */
     export function networkInfo() {
         const nets = networkInterfaces();
         const results: { [k: string]: any } = {};
@@ -31,11 +30,13 @@ export default class HUDServer {
     /* Base class for the HUD Webserver */
 
     app: expressWs.Application;
+    _expressWsInstance: expressWs.Instance;
     spotify: SpotifyWebApi;
     config: ServerSettings;
 
     constructor() {
-        this.app = expressWs(express()).app;
+        this._expressWsInstance = expressWs(express());
+        this.app = this._expressWsInstance.app;
         this.spotify = new SpotifyWebApi();
 
         // create a template config.json if one does not already exist
@@ -58,18 +59,34 @@ export default class HUDServer {
         this.initRoutes();
     }
 
+    sendMessage(ws: any, type: string, data: any) {
+        /* All WebSocket messages should be JSON serialized packets containing a type string and enclosed data */
+        ws.send(
+            JSON.stringify({
+                type: type,
+                data: JSON.stringify(data),
+            })
+        );
+    }
+
+    getAllClients() {
+        /* Returns an array of all connected WebSocket clients */
+        return Array.from(this._expressWsInstance.getWss().clients);
+    }
+
     initRoutes() {
+        /* Initialize server endpoints */
+
         // init static
         this.app.use(express.static("public"));
         // make client js scripts accessible
         this.app.use("/client", express.static("build/client"));
 
         // init websocket endpoint
-        this.app.ws("/", function (ws, req) {
-            ws.on("message", function (msg) {
-                console.log(msg);
+        this.app.ws("/", (ws, req) => {
+            ws.on("message", (msg) => {
+                this.sendMessage(ws, "test", {a: 1});
             });
-            console.log("socket", req);
         });
     }
 

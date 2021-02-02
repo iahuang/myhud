@@ -6,6 +6,9 @@ class ServerInterface {
         this.socket.addEventListener('open', (event)=> {
             this.socket.send('Hello Server!');
         });
+        this.socket.addEventListener('message', (ev)=>{
+            console.log(ev);
+        })
     }
 }
 
