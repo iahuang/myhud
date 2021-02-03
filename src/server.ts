@@ -182,12 +182,25 @@ export default class HUDServer {
 
         // init spotify routes
         this.app.get("/login", (req, res) => {
-            const page = this.spotify.createAuthorizeURL(SPOTIFY_SCOPES, "");
+            const { origin } = req.query;
+            
+            if (!origin) {
+                res.send("Missing client info");
+                return;
+            }
+            this.spotify = new SpotifyWebApi({
+                clientId: this.config.clientId,
+                clientSecret: this.config.clientSecret,
+                redirectUri: origin+"callback",
+            });
+            // pass redirect uri as state string for spotify auth
+            // that way the server can safely redirect from either localhost or a real url
+            const page = this.spotify.createAuthorizeURL(SPOTIFY_SCOPES, origin.toString());
             res.redirect(page + "&show_dialog=true");
         });
 
         this.app.get("/callback", async (req, res) => {
-            const { code } = req.query;
+            const { code, state } = req.query;
 
             try {
                 var data = await this.spotify.authorizationCodeGrant(
@@ -197,7 +210,7 @@ export default class HUDServer {
                 this.spotify.setAccessToken(access_token);
                 this.spotify.setRefreshToken(refresh_token);
 
-                res.redirect("http://localhost:3000");
+                res.redirect(state as string);
             } catch (err) {
                 res.send("oops there was an error lmao idk");
                 console.log(err.toString());

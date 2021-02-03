@@ -262,9 +262,13 @@ class ClockWidget extends Component {
         let dateString = `${days[date.getDay()]}, ${
             months[date.getMonth()]
         } ${date.getDate()}`;
+        let hh = h%12;
+        if (hh == 0) {
+            hh = 12;
+        }
         return div(
             span(
-                span((h % 12) + ":" + m).class("cl-hm"),
+                span(hh + ":" + m).class("cl-hm"),
                 span(h > 12 ? "PM" : "AM").class("cl-ampm")
             ).class("cl-time"),
             span(dateString).class("cl-date")
@@ -377,7 +381,7 @@ async function main() {
         document.body.appendChild(
             div(
                 image("Spotify_Icon_RGB_Green.png").width(64).height(64),
-                hyperlink("Login with Spotify").href("/login")
+                hyperlink("Login with Spotify").href(`/login?origin=${encodeURIComponent(window.location.href)}`)
             )
                 .class("spotify-login")
                 .render()
