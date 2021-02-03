@@ -64,18 +64,28 @@ class ServerInterface {
 
     async nowPlaying() {
         let resp = await this.serverGet("now-playing");
+        if (!Object.keys(resp).length) {
+            return null;
+        }
         return resp as SpotifyApi.CurrentlyPlayingResponse;
     }
 }
 
 const si = new ServerInterface();
 
+function truncateSongName(name: string, maxLength = 32) {
+    if (name.length+3 > maxLength) {
+        return name.substring(0, maxLength-3)+"...";
+    }
+    return name;
+}
+
 function makeSongNameElement(song: SpotifyApi.TrackObjectFull) {
     let children: any[] = [];
 
     // add artist links
     let first = true;
-    for (let artist of song.artists) {
+    for (let artist of song.artists.slice(0, 2)) {
         if (!first) {
             children.push(", ");
         }
@@ -88,21 +98,39 @@ function makeSongNameElement(song: SpotifyApi.TrackObjectFull) {
         );
     }
 
-    children.push(" − ");
+    if (song.artists.length > 2) {
+        children.push(", et. al.")
+    }
 
+    children.push(" − ");
+    let name = truncateSongName(song.name);
     children.push(
-        hyperlink(song.name).href(song.external_urls.spotify).class("np-link")
+        hyperlink(name).href(song.external_urls.spotify).class("np-link")
     );
 
     return div(...children);
 }
+
+let nowPlaying: SpotifyApi.CurrentlyPlayingResponse | null;
 
 let songProgress = {
     progress: 0,
     duration: 0,
 };
 
-function nowPlayingWidget(nowPlaying: SpotifyApi.CurrentlyPlayingResponse) {
+function nowPlayingWidget(nowPlaying: SpotifyApi.CurrentlyPlayingResponse | null) {
+    if (nowPlaying === null){
+        return div(
+            image("no_song.png").class("np-album"),
+            div(
+                span("Now playing ♪").class("np-label"),
+                inlineHTML("<div class=\"np-song no-song\">afsdlkjfasdkfsdadsfjafsljdadfjs</div>"),
+                htmless.inlineComponent(() =>
+                    progressBar(0, 10)
+                ).id("time")
+            )
+        ).class("np-widget");
+    }
     let song = nowPlaying.item!;
     songProgress = {
         progress: nowPlaying.progress_ms || 0,
@@ -119,17 +147,6 @@ function nowPlayingWidget(nowPlaying: SpotifyApi.CurrentlyPlayingResponse) {
         )
     ).class("np-widget");
 }
-
-setInterval(()=>{
-    /* Increment song progress client-side */
-    songProgress.progress+=500;
-
-    // prevent song bar from going past the end of the song;
-    if (songProgress.progress > songProgress.duration) {
-        songProgress.progress = songProgress.duration;
-    }
-    htmless.rerender("time");
-}, 500)
 
 function timeString(ms: number) {
     let zeroPad = (n: number) => (n < 10 ? "0" + n : n.toString());
@@ -163,8 +180,28 @@ async function main() {
         return;
     }
 
-    let nowPlaying = await si.nowPlaying();
-    document.body.appendChild(nowPlayingWidget(nowPlaying).render());
+    nowPlaying = await si.nowPlaying();
+    document.body.appendChild(div(
+        htmless.inlineComponent(()=>nowPlayingWidget(nowPlaying)).id("now-playing")
+    ).render());
 }
+
+setInterval(()=>{
+    /* Increment song progress client-side */
+    songProgress.progress+=500;
+
+    // prevent song bar from going past the end of the song;
+    if (songProgress.progress > songProgress.duration) {
+        songProgress.progress = songProgress.duration;
+    }
+    htmless.rerender("time");
+}, 500)
+
+
+setInterval(async ()=>{
+    /* Periodically refresh "now-playing" widget */
+    nowPlaying = await si.nowPlaying();
+    htmless.rerender("now-playing");
+}, 3000)
 
 main();

@@ -46,7 +46,7 @@ a:visited {
 }
 
 .np-song {
-    font-size: 24pt;
+    font-size: 20pt;
 }
 
 .np-album {
@@ -79,4 +79,8 @@ a:visited {
     display: flex;
     flex-direction: row;
     align-items: center;
+}
+
+.no-song {
+    opacity: 0%;
 }
