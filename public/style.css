@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
+
+:root {
+    --bg1: #0d0c1b;
+    --text1: white;
+    --text2: rgb(174, 255, 224);
+}
+
+body {
+    margin: 0;
+    font-family: 'Open Sans', sans-serif;
+    color: var(--text1);
+    background-color: var(--bg1);
+}
+
+a {
+    color: var(--text2);
+}
+
+a:visited {
+    color: var(--text2);
+}
+
+.spotify-login {
+    font-size: 32pt;
+    text-align: center;
+    margin-top: 100px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.spotify-login > img {
+    margin-right: 10px;
+}
