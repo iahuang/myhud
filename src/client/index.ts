@@ -216,7 +216,8 @@ class ClockWidget extends Component {
     body() {
         let date = new Date();
         let h = date.getHours();
-        let m = date.getMinutes();
+        let zeroPad = (n: number) => (n < 10 ? "0" + n : n.toString());
+        let m = zeroPad(date.getMinutes());
         const days = [
             "Sunday",
             "Monday",
