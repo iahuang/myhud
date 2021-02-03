@@ -55,7 +55,7 @@ class NewsFeed {
         if (this.isEmpty()) {
             return null;
         }
-        
+
         return this.feedCache.pop();
     }
 
@@ -69,7 +69,7 @@ class NewsFeed {
         this.feedCache = await this.newsSource.getHeadlines();
         this._cacheIndex = -1;
         this._busy = false;
-        console.log("...done")
+        console.log("...done");
     }
 }
 
@@ -165,6 +165,29 @@ export default class HUDServer {
         }
     }
 
+    planRefresh(expiry: number) {
+        /* Refresh tokens in [expiry] seconds */
+        
+        // refresh a little early just in case
+        setTimeout(()=>{this.reauth()}, (expiry-10)*1000);
+    }
+
+    async reauth() {
+        this.spotify.refreshAccessToken().then(
+            (data)=>{
+                console.log("The access token has been refreshed!");
+
+                // Save the access token so that it's used in future calls
+                this.spotify.setAccessToken(data.body.access_token);
+
+                this.planRefresh(data.body.expires_in);
+            },
+            (err)=>{
+                console.log("Could not refresh access token", err);
+            }
+        );
+    }
+
     initRoutes() {
         /* Initialize server endpoints */
 
@@ -183,7 +206,7 @@ export default class HUDServer {
         // init spotify routes
         this.app.get("/login", (req, res) => {
             const { origin } = req.query;
-            
+
             if (!origin) {
                 res.send("Missing client info");
                 return;
@@ -191,11 +214,14 @@ export default class HUDServer {
             this.spotify = new SpotifyWebApi({
                 clientId: this.config.clientId,
                 clientSecret: this.config.clientSecret,
-                redirectUri: origin+"callback",
+                redirectUri: origin + "callback",
             });
             // pass redirect uri as state string for spotify auth
             // that way the server can safely redirect from either localhost or a real url
-            const page = this.spotify.createAuthorizeURL(SPOTIFY_SCOPES, origin.toString());
+            const page = this.spotify.createAuthorizeURL(
+                SPOTIFY_SCOPES,
+                origin.toString()
+            );
             res.redirect(page + "&show_dialog=true");
         });
 
@@ -206,9 +232,11 @@ export default class HUDServer {
                 var data = await this.spotify.authorizationCodeGrant(
                     code as string
                 );
-                const { access_token, refresh_token } = data.body;
+
+                const { access_token, refresh_token, expires_in } = data.body;
                 this.spotify.setAccessToken(access_token);
                 this.spotify.setRefreshToken(refresh_token);
+                this.planRefresh(expires_in);
 
                 res.redirect(state as string);
             } catch (err) {
@@ -235,7 +263,7 @@ export default class HUDServer {
                 await this.news.refresh();
             }
             res.json(this.news.nextHeadline());
-        })
+        });
     }
 
     start() {
