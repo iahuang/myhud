@@ -423,20 +423,237 @@ abstract class Theme {
 
 class DefaultTheme extends Theme {
     constructor() {
-        super({stylesheet: "theme_dark.css"});
+        super({ stylesheet: "theme_dark.css" });
     }
 }
 
 class Theme_Pink extends Theme {
     constructor() {
-        super({stylesheet: "theme_pink.css"});
+        super({ stylesheet: "theme_pink.css" });
+    }
+}
+
+namespace BWTheme {
+    /*
+        A theme designed after the Life/Death Wallpaper Engine Theme
+    */
+
+    function randomNumber(min: number, max: number) {
+        return Math.random() * (max - min) + min;
+    }
+
+    class Vector {
+        x: number;
+        y: number;
+
+        constructor(x: number, y: number) {
+            this.x = x;
+            this.y = y;
+        }
+        expand(): [number, number] {
+            return [this.x, this.y];
+        }
+        static get zero() {
+            return new Vector(0, 0);
+        }
+    }
+
+    class FlowerPetal {
+        position: Vector;
+        z: number;
+        velocity: Vector;
+        rollVel: number;
+        pitchVel: number;
+        roll: number;
+        pitch: number;
+
+        constructor() {
+            const twopi = Math.PI * 2;
+            this.position = Vector.zero;
+            this.velocity = Vector.zero;
+            this.roll = Math.random() * twopi;
+            this.pitch = Math.random() * twopi;
+            this.rollVel = randomNumber(-10, 10);
+            this.pitchVel = randomNumber(-10, 10);
+            this.z = randomNumber(0.8, 1.5);
+        }
+
+        place(canvasWidth: number) {
+            this.position.x = Math.random() * canvasWidth;
+            this.position.y = -10;
+        }
+    }
+
+    export class Theme_BW extends Theme {
+        canvas: HTMLCanvasElement;
+        ctx: CanvasRenderingContext2D;
+
+        petals: FlowerPetal[];
+
+        // Base framerate setting
+        framerate = 36;
+        get interDelayMs() {
+            /* Interval setting for setInterval() */
+            return 1000 / this.framerate;
+        }
+        get deltaTime() {
+            /* Time elapsed between frames */
+            return 1 / this.framerate;
+        }
+
+        // spawn rates
+        petalSpawnRate = 10;
+
+        animInterval: number | null = null;
+
+        treeImage: HTMLImageElement;
+
+        constructor() {
+            super({ stylesheet: "theme_bw.css" });
+
+            this.canvas = document.createElement("canvas");
+            this.canvas.className = "bw-canv";
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', ()=>{
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            })
+
+            this.ctx = this.canvas.getContext("2d")!;
+
+            if (this.ctx === null) {
+                console.error("Canvas not supported");
+            }
+
+            this.petals = [];
+
+            for (let i = 0; i < 20; i++) {
+                this.addPetal();
+            }
+
+            this.treeImage = new Image();
+            this.treeImage.src = "bw_blossom.png";
+
+        }
+
+        onLoad() {
+            document.body.appendChild(this.canvas);
+            this.frame();
+
+            this.animInterval = window.setInterval(() => {
+                this.frame();
+            }, this.interDelayMs);
+        }
+
+        addPetal() {
+            let p = new FlowerPetal();
+            p.place(this.canvas.width);
+            p.velocity.x -= 100;
+
+            this.petals.push(p);
+            return p;
+
+        }
+
+        frame() {
+            const twopi = Math.PI * 2;
+            const dragcoeff = 20;
+            const accel = 100;
+            const termvel = 200;
+
+            // draw background
+            this.ctx.fillStyle = "#e2e6ec";
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.fillStyle = "#1e2029";
+            this.drawPolygon([
+                new Vector(0, this.canvas.height),
+                new Vector(this.canvas.width, this.canvas.height),
+                new Vector(this.canvas.width, 0),
+            ]);
+
+            let p = this.deltaTime * this.petalSpawnRate;
+            while (Math.random() < p) {
+                this.addPetal();
+                p-=1;
+            }
+
+            // draw tree
+            this.ctx.globalAlpha = 0.7;
+            this.ctx.drawImage(
+                this.treeImage,
+                this.canvas.width - this.treeImage.width,
+                this.canvas.height - this.treeImage.height
+            );
+            this.ctx.globalAlpha = 1;
+
+            // draw petals
+            for (let petal of this.petals) {
+                this.ctx.fillStyle = "white";
+                this.ctx.beginPath();
+                this.ctx.translate(...petal.position.expand());
+                this.ctx.rotate(petal.roll);
+                this.ctx.scale(1, 0.7 * Math.sin(petal.pitch));
+                this.ctx.scale(1/petal.z, 1/petal.z)
+                this.ctx.arc(0, 0, 10, 0, twopi);
+                this.ctx.resetTransform();
+                this.ctx.fill();
+
+                /* 
+                    Petal Physics
+
+                    literally some math i came up with off the top of my head.
+                    not based at all in reality
+                */
+
+                // apply gravity
+                petal.velocity.y += accel * this.deltaTime;
+
+                // apply drag
+                let dragAmt =
+                    dragcoeff * Math.sin(petal.pitch) * this.deltaTime;
+                petal.velocity.y -= dragAmt;
+                petal.velocity.x -= dragcoeff * Math.sin(petal.roll) * 0.25 * Math.cos(petal.pitch);
+
+                // terminal velocity
+                petal.velocity.y = Math.min(petal.velocity.y, termvel);
+
+                // move
+                petal.position.x += petal.velocity.x * this.deltaTime / petal.z; // lessen petal x velocity to give parallax effect
+                petal.position.y += petal.velocity.y * this.deltaTime;
+                petal.roll += petal.rollVel * this.deltaTime;
+                petal.pitch += petal.pitchVel * this.deltaTime;
+            }
+
+            // remove offscreen petals
+            this.petals = this.petals.filter(
+                (p) => p.position.y <= this.canvas.height
+            );
+        }
+
+        drawPolygon(points: Vector[]) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(...points[0].expand());
+            for (let i = 1; i < points.length; i++) {
+                this.ctx.lineTo(...points[i].expand());
+            }
+            this.ctx.closePath();
+            this.ctx.fill();
+        }
+
+        onUnload() {
+            // remove canvas
+            this.canvas.parentElement?.removeChild(this.canvas);
+            window.clearInterval(this.animInterval!);
+        }
     }
 }
 
 class SiteThemeManager {
     private _theme: Theme;
-    constructor() {
-        this._theme = new DefaultTheme();
+    constructor(initialTheme: Theme) {
+        this._theme = initialTheme;
         this.loadTheme(this._theme);
     }
 
@@ -446,7 +663,7 @@ class SiteThemeManager {
         if (oldCSS) {
             oldCSS.parentElement?.removeChild(oldCSS);
         }
-        
+
         // inject stylesheet
         if (theme.stylesheet) {
             let link = document.createElement("link");
@@ -475,7 +692,7 @@ class SiteThemeManager {
 
 async function main() {
     const si = new ServerInterface();
-    const site = new SiteThemeManager();
+    const site = new SiteThemeManager(new BWTheme.Theme_BW());
 
     // DEBUG: link si and site instances to window
     (window as any).si = si;
