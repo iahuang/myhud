@@ -269,7 +269,7 @@ class ClockWidget extends Component {
         return div(
             span(
                 span(hh + ":" + m).class("cl-hm"),
-                span(h > 12 ? "PM" : "AM").class("cl-ampm")
+                span(h >= 12 ? "PM" : "AM").class("cl-ampm")
             ).class("cl-time"),
             span(dateString).class("cl-date")
         ).class("clock");
