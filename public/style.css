@@ -137,7 +137,7 @@ a:visited {
 
 .octocat {
     position: absolute;
-    fill: white;
+    fill: var(--text2);
     right: 0;
     bottom: 0;
     cursor: pointer;
