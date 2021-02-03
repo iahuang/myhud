@@ -4,6 +4,7 @@ import SpotifyWebApi from "spotify-web-api-node";
 import fs from "fs";
 import ServerSettings from "./setting_definitions";
 import { networkInterfaces } from "os";
+import { APNews, NewsArticle, WashingtonPost } from "./news";
 
 namespace Network {
     export function networkInfo() {
@@ -23,6 +24,52 @@ namespace Network {
         }
 
         return results;
+    }
+}
+
+class NewsFeed {
+    /* Class for delivering news for the News widget */
+
+    newsSource: WashingtonPost;
+    feedCache: NewsArticle[];
+    private _cacheIndex: number;
+
+    // as to not process multiple refresh requests at once
+    private _busy = false;
+
+    constructor() {
+        this.newsSource = new WashingtonPost();
+        this.feedCache = [];
+        this._cacheIndex = -1;
+    }
+
+    isEmpty() {
+        return this.feedCache.length === 0;
+    }
+
+    isLoading() {
+        return this._busy;
+    }
+
+    nextHeadline() {
+        if (this.isEmpty()) {
+            return null;
+        }
+        
+        return this.feedCache.pop();
+    }
+
+    async refresh() {
+        if (this._busy) {
+            return;
+        }
+        if (!this._busy) {
+            this._busy = true;
+        }
+        this.feedCache = await this.newsSource.getHeadlines();
+        this._cacheIndex = -1;
+        this._busy = false;
+        console.log("...done")
     }
 }
 
@@ -56,6 +103,7 @@ export default class HUDServer {
     _expressWsInstance: expressWs.Instance;
     spotify: SpotifyWebApi;
     config: ServerSettings;
+    news: NewsFeed;
 
     constructor() {
         this._expressWsInstance = expressWs(express());
@@ -84,6 +132,10 @@ export default class HUDServer {
             clientSecret: this.config.clientSecret,
             redirectUri: "http://localhost:3000/callback",
         });
+
+        // init news
+        this.news = new NewsFeed();
+        this.news.refresh();
 
         this.initRoutes();
     }
@@ -137,7 +189,6 @@ export default class HUDServer {
         this.app.get("/callback", async (req, res) => {
             const { code } = req.query;
 
-            console.log(req.query);
             try {
                 var data = await this.spotify.authorizationCodeGrant(
                     code as string
@@ -156,7 +207,6 @@ export default class HUDServer {
         this.app.get("/now-playing", async (req, res) => {
             try {
                 let result = await this.spotify.getMyCurrentPlayingTrack();
-                console.log(result.body);
                 res.status(200).send(result.body);
             } catch (err) {
                 res.status(400).send(err);
@@ -164,8 +214,15 @@ export default class HUDServer {
         });
 
         this.app.get("/logged-in", async (req, res) => {
-            res.send({ logged_in: await this.amILoggedIn() });
+            res.json({ logged_in: await this.amILoggedIn() });
         });
+
+        this.app.get("/news", async (req, res) => {
+            if (this.news.isEmpty()) {
+                await this.news.refresh();
+            }
+            res.json(this.news.nextHeadline());
+        })
     }
 
     start() {

@@ -10,7 +10,10 @@ interface WSListener {
     messageType: string;
     callback: WsListenerCallback;
 }
-
+interface NewsResponse {
+    url: string;
+    headline: string;
+}
 class ServerInterface {
     /* Class for interacting with the HUD server */
     socket: WebSocket;
@@ -68,6 +71,15 @@ class ServerInterface {
             return null;
         }
         return resp as SpotifyApi.CurrentlyPlayingResponse;
+    }
+    async nextHeadline() {
+        let resp = await this.serverGet("news");
+
+        if (!resp) {
+            return null;
+        }
+
+        return resp as NewsResponse;
     }
 }
 
@@ -211,7 +223,9 @@ class ClockWidget extends Component {
     constructor() {
         super();
         // update the clock every second
-        setInterval(()=>{this.rerender()}, 1000);
+        setInterval(() => {
+            this.rerender();
+        }, 1000);
     }
     body() {
         let date = new Date();
@@ -241,7 +255,9 @@ class ClockWidget extends Component {
             "November",
             "December",
         ];
-        let dateString = `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+        let dateString = `${days[date.getDay()]}, ${
+            months[date.getMonth()]
+        } ${date.getDate()}`;
         return div(
             span(
                 span((h % 12) + ":" + m).class("cl-hm"),
@@ -252,9 +268,107 @@ class ClockWidget extends Component {
     }
 }
 
-const si = new ServerInterface();
+class NewsWidget extends Component {
+    refreshTime = 20000; // ms
+    currentHeadline: NewsResponse | null = null;
+
+    serverInterface: ServerInterface;
+
+    constructor(si: ServerInterface) {
+        super();
+
+        this.serverInterface = si;
+
+        // initial fetch
+        this.serverInterface.nextHeadline().then((resp) => {
+            this.currentHeadline = resp;
+            htmless.rerender("nw-headline");
+        });
+
+        // periodic news fetches
+        setInterval(async () => {
+            this.currentHeadline = await this.serverInterface.nextHeadline();
+            const political = ["politics", "legal-issues"];
+            const politicalKw = [
+                "trump", "aoc", "mcconnell", "biden", "obama", "ocasio",
+                "giuliani", "sanders", "senate", "democrat", "republican", "gop"
+            ]
+
+            let cb = document.getElementById("politics-cb") as HTMLInputElement;
+            let skipPolitical = cb.checked;
+
+            while (skipPolitical) {
+                if (this.currentHeadline === null) {
+                    break
+                }
+                let category = this.getCategoryFromUrl(this.currentHeadline.url);
+
+                let check = false;
+                for (let kw of politicalKw) {
+                    if (this.currentHeadline.headline.toLowerCase().includes(kw)) {
+                        check = true;
+                    }
+                }
+
+                if (!check && !political.includes(category)) {
+                    break;
+                }
+
+                // console.log("skipping",this.currentHeadline);
+
+                this.currentHeadline = await this.serverInterface.nextHeadline();
+            }
+
+            htmless.rerender("nw-headline");
+        }, this.refreshTime);
+    }
+
+    getCategoryFromUrl(url: string) {
+        let path = (new URL(url)).pathname.split("/").slice(1);
+        let category;
+
+        if (path[0] == "local") {
+            category = path[1];
+        } else {
+            category = path[0];
+        }
+
+        return category;
+    }
+
+    renderHeadline() {
+        let newsHeadline;
+
+        if (!this.currentHeadline) {
+            newsHeadline = span("Loading...").class("nw-headline");
+        } else {
+            newsHeadline = hyperlink(this.currentHeadline.headline)
+                .href(this.currentHeadline.url)
+                .class("nw-headline");
+        }
+        return newsHeadline;
+    }
+
+    body() {
+        
+
+        return div(
+            span(
+                headers.h1("Current News").class("nw-header"),
+                span("Hide politics"),
+                input.checkbox().id("politics-cb")
+            ).class("nw-top"),
+            htmless.inlineComponent(()=>this.renderHeadline()).id("nw-headline")
+        ).class("news-widget");
+    }
+}
 
 async function main() {
+    const si = new ServerInterface();
+
+    // DEBUG: link si instance to window
+    (window as any).si = si;
+
     if (!(await si.amILoggedIn())) {
         document.body.appendChild(
             div(
@@ -269,11 +383,15 @@ async function main() {
 
     let songWidget = new SongWidget(si);
     let clockWidget = new ClockWidget();
+    let newsWidget = new NewsWidget(si);
     document.body.appendChild(
         div(
             div(span(clockWidget, songWidget).class("row")).class("v-center"),
             div(
-                hyperlink(image("github_icon.png").class("octocat")).href("https://github.com/iahuang/myhud")
+                hyperlink(image("github_icon.png").class("octocat")).href(
+                    "https://github.com/iahuang/myhud"
+                ),
+                newsWidget
             ).class("overlay")
         ).render()
     );

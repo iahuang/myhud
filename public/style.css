@@ -147,3 +147,27 @@ a:visited {
     width: 48px;
     height: auto;
 }
+
+.news-widget {
+    position: absolute;
+    bottom: 0;
+    padding: 100px;
+    opacity: 60%;
+}
+
+.news-widget:hover{
+    opacity: 100%;
+}
+
+.nw-header {
+    margin: 0;
+    font-size: 16pt;
+    margin-right: 10px;
+}
+
+.nw-top {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: left;
+}
