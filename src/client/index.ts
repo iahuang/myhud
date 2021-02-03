@@ -262,7 +262,7 @@ class ClockWidget extends Component {
         let dateString = `${days[date.getDay()]}, ${
             months[date.getMonth()]
         } ${date.getDate()}`;
-        let hh = h%12;
+        let hh = h % 12;
         if (hh == 0) {
             hh = 12;
         }
@@ -298,22 +298,36 @@ class NewsWidget extends Component {
             this.currentHeadline = await this.serverInterface.nextHeadline();
             const political = ["politics", "legal-issues"];
             const politicalKw = [
-                "trump", "aoc", "mcconnell", "biden", "obama", "ocasio",
-                "giuliani", "sanders", "senate", "democrat", "republican", "gop"
-            ]
+                "trump",
+                "aoc",
+                "mcconnell",
+                "biden",
+                "obama",
+                "ocasio",
+                "giuliani",
+                "sanders",
+                "senate",
+                "democrat",
+                "republican",
+                "gop",
+            ];
 
             let cb = document.getElementById("politics-cb") as HTMLInputElement;
             let skipPolitical = cb.checked;
 
             while (skipPolitical) {
                 if (this.currentHeadline === null) {
-                    break
+                    break;
                 }
-                let category = this.getCategoryFromUrl(this.currentHeadline.url);
+                let category = this.getCategoryFromUrl(
+                    this.currentHeadline.url
+                );
 
                 let check = false;
                 for (let kw of politicalKw) {
-                    if (this.currentHeadline.headline.toLowerCase().includes(kw)) {
+                    if (
+                        this.currentHeadline.headline.toLowerCase().includes(kw)
+                    ) {
                         check = true;
                     }
                 }
@@ -332,7 +346,7 @@ class NewsWidget extends Component {
     }
 
     getCategoryFromUrl(url: string) {
-        let path = (new URL(url)).pathname.split("/").slice(1);
+        let path = new URL(url).pathname.split("/").slice(1);
         let category;
 
         if (path[0] == "local") {
@@ -358,15 +372,15 @@ class NewsWidget extends Component {
     }
 
     body() {
-        
-
         return div(
             span(
                 headers.h1("Current News").class("nw-header"),
                 span("Hide politics"),
                 input.checkbox().id("politics-cb")
             ).class("nw-top"),
-            htmless.inlineComponent(()=>this.renderHeadline()).id("nw-headline")
+            htmless
+                .inlineComponent(() => this.renderHeadline())
+                .id("nw-headline")
         ).class("news-widget");
     }
 }
@@ -381,12 +395,24 @@ async function main() {
         document.body.appendChild(
             div(
                 image("Spotify_Icon_RGB_Green.png").width(64).height(64),
-                hyperlink("Login with Spotify").href(`/login?origin=${encodeURIComponent(window.location.href)}`)
+                hyperlink("Login with Spotify").href(
+                    `/login?origin=${encodeURIComponent(window.location.href)}`
+                )
             )
                 .class("spotify-login")
                 .render()
         );
         return;
+    }
+
+    // attempt to keep device awake using experimental wakeLock api
+
+    if ("wakeLock" in navigator) {
+        try {
+            let wakeLock = await (navigator as any).wakeLock.request('screen');
+        } catch (err) {
+            console.error(`${err.name}, ${err.message}`);
+        }
     }
 
     let songWidget = new SongWidget(si);
