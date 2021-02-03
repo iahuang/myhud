@@ -105,7 +105,10 @@ class SongWidget extends Component {
 
         setInterval(() => {
             /* Increment song progress client-side */
-            this.songPositionCache.progress += 500;
+
+            if (this.nowPlayingCache?.is_playing) {
+                this.songPositionCache.progress += 500;
+            }
 
             // prevent song bar from going past the end of the song;
             if (
@@ -148,13 +151,14 @@ class SongWidget extends Component {
         // add artist links
         let first = true;
         for (let artist of song.artists.slice(0, 2)) {
+            // only add commas between artists
             if (!first) {
                 children.push(", ");
             }
             if (first) {
-                // only add commas between artists
                 first = false;
             }
+
             children.push(
                 span(hyperlink(artist.name).href(artist.external_urls.spotify))
             );
