@@ -1,0 +1,10 @@
+:root {
+    --bg1: #f1f0f8;
+    --bg2: #c5c5c5;
+    --text1: rgb(45, 44, 51);
+    --text2: #968096;
+}
+
+.octocat {
+    fill: rgb(255, 172, 237)
+}

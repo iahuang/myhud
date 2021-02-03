@@ -4,7 +4,7 @@
     --bg1: #0d0c1b;
     --bg2: #282c3d;
     --text1: white;
-    --text2: rgb(174, 255, 208);
+    --text2: #aeffd0;
 }
 
 body {
@@ -102,12 +102,10 @@ a:visited {
 
 .cl-ampm {
     font-size: 2vw;
-    font-family: 'Lato', sans-serif;
 }
 
 .cl-date {
     font-size: 2vw;
-    font-family: 'Lato', sans-serif;
 }
 
 .row {
@@ -139,7 +137,7 @@ a:visited {
 
 .octocat {
     position: absolute;
-    filter: invert(100%);
+    fill: white;
     right: 0;
     bottom: 0;
     cursor: pointer;
@@ -153,6 +151,7 @@ a:visited {
     bottom: 0;
     padding: 100px;
     opacity: 60%;
+    transition: 0.5s;
 }
 
 .news-widget:hover{
