@@ -270,7 +270,10 @@ async function main() {
     let clockWidget = new ClockWidget();
     document.body.appendChild(
         div(
-            div(span(clockWidget, songWidget).class("row")).class("v-center")
+            div(span(clockWidget, songWidget).class("row")).class("v-center"),
+            div(
+                hyperlink(image("github_icon.png").class("octocat")).href("https://github.com/iahuang/myhud")
+            ).class("overlay")
         ).render()
     );
 }
