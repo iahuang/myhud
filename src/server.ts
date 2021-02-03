@@ -4,8 +4,6 @@ import SpotifyWebApi from "spotify-web-api-node";
 import fs from "fs";
 import ServerSettings from "./setting_definitions";
 import { networkInterfaces } from "os";
-import Util from "./util";
-import { exception } from "console";
 
 namespace Network {
     export function networkInfo() {

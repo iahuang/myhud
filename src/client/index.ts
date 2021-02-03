@@ -70,6 +70,86 @@ class ServerInterface {
 
 const si = new ServerInterface();
 
+function makeSongNameElement(song: SpotifyApi.TrackObjectFull) {
+    let children: any[] = [];
+
+    // add artist links
+    let first = true;
+    for (let artist of song.artists) {
+        if (!first) {
+            children.push(", ");
+        }
+        if (first) {
+            // only add commas between artists
+            first = false;
+        }
+        children.push(
+            span(hyperlink(artist.name).href(artist.external_urls.spotify))
+        );
+    }
+
+    children.push(" − ");
+
+    children.push(
+        hyperlink(song.name).href(song.external_urls.spotify).class("np-link")
+    );
+
+    return div(...children);
+}
+
+let songProgress = {
+    progress: 0,
+    duration: 0,
+};
+
+function nowPlayingWidget(nowPlaying: SpotifyApi.CurrentlyPlayingResponse) {
+    let song = nowPlaying.item!;
+    songProgress = {
+        progress: nowPlaying.progress_ms || 0,
+        duration: song.duration_ms,
+    };
+    return div(
+        image(song.album.images[0].url).class("np-album"),
+        div(
+            span("Now playing ♪").class("np-label"),
+            makeSongNameElement(song).class("np-song"),
+            htmless.inlineComponent(() =>
+                progressBar(songProgress.progress, songProgress.duration)
+            ).id("time")
+        )
+    ).class("np-widget");
+}
+
+setInterval(()=>{
+    /* Increment song progress client-side */
+    songProgress.progress+=500;
+
+    // prevent song bar from going past the end of the song;
+    if (songProgress.progress > songProgress.duration) {
+        songProgress.progress = songProgress.duration;
+    }
+    htmless.rerender("time");
+}, 500)
+
+function timeString(ms: number) {
+    let zeroPad = (n: number) => (n < 10 ? "0" + n : n.toString());
+    let s = Math.floor(ms / 1000);
+    let secs = s % 60;
+    let mins = Math.floor(s / 60);
+    return zeroPad(mins) + ":" + zeroPad(secs);
+}
+
+function progressBar(timePlayed: number, songLength: number) {
+    return span(
+        timeString(timePlayed),
+        div(
+            div()
+                .class("np-time-progress")
+                .style({ width: (timePlayed / songLength) * 100 + "%" })
+        ).class("np-time-bar")
+    ).class("np-time-span");
+}
+
 async function main() {
     if (!(await si.amILoggedIn())) {
         document.body.appendChild(
@@ -82,13 +162,9 @@ async function main() {
         );
         return;
     }
+
     let nowPlaying = await si.nowPlaying();
-    document.body.appendChild(
-        div(
-            "Now playing:",
-            div(nowPlaying.item!.artists.map(artist=>artist.name).join(", ")+" - "+nowPlaying.item!.name)
-        ).render()
-    );
+    document.body.appendChild(nowPlayingWidget(nowPlaying).render());
 }
 
 main();
