@@ -496,6 +496,7 @@ async function main() {
     }
 
     // attempt to keep device awake using experimental wakeLock api
+    // have yet to test whether this actually works
 
     if ("wakeLock" in navigator) {
         try {
