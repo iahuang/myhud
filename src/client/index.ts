@@ -207,6 +207,50 @@ class SongWidget extends Component {
     }
 }
 
+class ClockWidget extends Component {
+    constructor() {
+        super();
+        // update the clock every second
+        setInterval(()=>{this.rerender()}, 1000);
+    }
+    body() {
+        let date = new Date();
+        let h = date.getHours();
+        let m = date.getMinutes();
+        const days = [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ];
+        const months = [
+            "January",
+            "February",
+            "March",
+            "April",
+            "May",
+            "June",
+            "July",
+            "August",
+            "September",
+            "October",
+            "November",
+            "December",
+        ];
+        let dateString = `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
+        return div(
+            span(
+                span((h % 12) + ":" + m).class("cl-hm"),
+                span(h > 12 ? "PM" : "AM").class("cl-ampm")
+            ).class("cl-time"),
+            span(dateString).class("cl-date")
+        ).class("clock");
+    }
+}
+
 const si = new ServerInterface();
 
 async function main() {
@@ -223,7 +267,12 @@ async function main() {
     }
 
     let songWidget = new SongWidget(si);
-    document.body.appendChild(div(songWidget).render());
+    let clockWidget = new ClockWidget();
+    document.body.appendChild(
+        div(
+            div(span(clockWidget, songWidget).class("row")).class("v-center")
+        ).render()
+    );
 }
 
 main();

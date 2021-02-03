@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@100&display=swap');
 :root {
     --bg1: #0d0c1b;
     --bg2: #282c3d;
@@ -83,4 +83,43 @@ a:visited {
 
 .no-song {
     opacity: 0%;
+}
+
+
+.clock {
+    display: flex;
+    flex-direction: column;
+    align-items:flex-start;
+    justify-content: center;
+    opacity: 80%;
+    user-select: none;
+}
+
+.cl-hm {
+    font-size: 20vw;
+    font-family: 'Lato', sans-serif;
+}
+
+.cl-ampm {
+    font-size: 2vw;
+    font-family: 'Lato', sans-serif;
+}
+
+.cl-date {
+    font-size: 2vw;
+    font-family: 'Lato', sans-serif;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.v-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
 }
