@@ -611,8 +611,7 @@ namespace BWTheme {
                 petal.velocity.y += accel * this.deltaTime;
 
                 // apply drag
-                let dragAmt =
-                    dragcoeff * Math.sin(petal.pitch) * this.deltaTime;
+                let dragAmt = dragcoeff * Math.sin(petal.pitch) * this.deltaTime;
                 petal.velocity.y -= dragAmt;
                 petal.velocity.x -= dragcoeff * Math.sin(petal.roll) * 0.25 * Math.cos(petal.pitch);
 
