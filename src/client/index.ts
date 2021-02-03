@@ -15,7 +15,7 @@ class ServerInterface {
         this.socket.addEventListener("open", (event) => {
             this.socket.send("Hello Server!");
         });
-        
+
         // websocket message handler
         // all websocket messages are assumed to be JSON strings of format {type: string, data: any}
         this.socket.addEventListener("message", (ev) => {
@@ -36,9 +36,31 @@ class ServerInterface {
     addWsListener(messageType: string, cb: WsListenerCallback) {
         this.wsListeners.push({
             messageType: messageType,
-            callback: cb
+            callback: cb,
         });
+    }
+
+    async serverGet(endpoint: string, params?: any) {
+        let resp = await fetch(
+            "http://" +
+                window.location.host +
+                "/" +
+                endpoint +
+                new URLSearchParams(params).toString()
+        );
+
+        return await resp.json();
+    }
+
+    async amILoggedIn() {
+        return (await this.serverGet("logged-in")).logged_in;
     }
 }
 
 const si = new ServerInterface();
+
+async function main() {
+    if (!await si.amILoggedIn()) {
+        document.body.innerHTML = `<a class="spotify-login">Login to Spotify</a>`;
+    }
+}
