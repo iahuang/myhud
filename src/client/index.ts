@@ -71,101 +71,143 @@ class ServerInterface {
     }
 }
 
-const si = new ServerInterface();
+class SongWidget extends Component {
+    nowPlayingCache: SpotifyApi.CurrentlyPlayingResponse | null = null;
+    songPositionCache = {
+        progress: 0,
+        duration: 0,
+    };
 
-function truncateSongName(name: string, maxLength = 32) {
-    if (name.length+3 > maxLength) {
-        return name.substring(0, maxLength-3)+"...";
+    serverInterface: ServerInterface;
+
+    constructor(si: ServerInterface) {
+        super();
+
+        this.serverInterface = si;
+
+        // initially set "now playing" data
+        si.nowPlaying().then((resp) => {
+            this.nowPlayingCache = resp;
+            this.rerender();
+        });
+
+        setInterval(() => {
+            /* Increment song progress client-side */
+            this.songPositionCache.progress += 500;
+
+            // prevent song bar from going past the end of the song;
+            if (
+                this.songPositionCache.progress >
+                this.songPositionCache.duration
+            ) {
+                this.songPositionCache.progress = this.songPositionCache.duration;
+            }
+            htmless.rerender("time");
+        }, 500);
+
+        setInterval(async () => {
+            /* Periodically refresh "now-playing" widget */
+            this.nowPlayingCache = await this.serverInterface.nowPlaying();
+            htmless.rerender(this);
+        }, 3000);
     }
-    return name;
-}
 
-function makeSongNameElement(song: SpotifyApi.TrackObjectFull) {
-    let children: any[] = [];
+    progressBar(timePlayed: number, songLength: number) {
+        return span(
+            this.timeString(timePlayed),
+            div(
+                div()
+                    .class("np-time-progress")
+                    .style({ width: (timePlayed / songLength) * 100 + "%" })
+            ).class("np-time-bar")
+        ).class("np-time-span");
+    }
 
-    // add artist links
-    let first = true;
-    for (let artist of song.artists.slice(0, 2)) {
-        if (!first) {
-            children.push(", ");
+    truncateSongName(name: string, maxLength = 32) {
+        if (name.length + 3 > maxLength) {
+            return name.substring(0, maxLength - 3) + "...";
         }
-        if (first) {
-            // only add commas between artists
-            first = false;
+        return name;
+    }
+
+    makeSongNameElement(song: SpotifyApi.TrackObjectFull) {
+        let children: any[] = [];
+
+        // add artist links
+        let first = true;
+        for (let artist of song.artists.slice(0, 2)) {
+            if (!first) {
+                children.push(", ");
+            }
+            if (first) {
+                // only add commas between artists
+                first = false;
+            }
+            children.push(
+                span(hyperlink(artist.name).href(artist.external_urls.spotify))
+            );
         }
+
+        if (song.artists.length > 2) {
+            children.push(", et. al.");
+        }
+
+        children.push(" − ");
+        let name = this.truncateSongName(song.name);
         children.push(
-            span(hyperlink(artist.name).href(artist.external_urls.spotify))
+            hyperlink(name).href(song.external_urls.spotify).class("np-link")
         );
+
+        return div(...children);
     }
 
-    if (song.artists.length > 2) {
-        children.push(", et. al.")
+    timeString(ms: number) {
+        let zeroPad = (n: number) => (n < 10 ? "0" + n : n.toString());
+        let s = Math.floor(ms / 1000);
+        let secs = s % 60;
+        let mins = Math.floor(s / 60);
+        return zeroPad(mins) + ":" + zeroPad(secs);
     }
 
-    children.push(" − ");
-    let name = truncateSongName(song.name);
-    children.push(
-        hyperlink(name).href(song.external_urls.spotify).class("np-link")
-    );
-
-    return div(...children);
-}
-
-let nowPlaying: SpotifyApi.CurrentlyPlayingResponse | null;
-
-let songProgress = {
-    progress: 0,
-    duration: 0,
-};
-
-function nowPlayingWidget(nowPlaying: SpotifyApi.CurrentlyPlayingResponse | null) {
-    if (nowPlaying === null){
+    body() {
+        if (this.nowPlayingCache === null) {
+            return div(
+                image("no_song.png").class("np-album"),
+                div(
+                    span("Now playing ♪").class("np-label"),
+                    inlineHTML(
+                        '<div class="np-song no-song">afsdlkjfasdkfsdadsfjafsljdadfjs</div>'
+                    ),
+                    htmless
+                        .inlineComponent(() => this.progressBar(0, 10))
+                        .id("time")
+                )
+            ).class("np-widget");
+        }
+        let song = this.nowPlayingCache.item!;
+        this.songPositionCache = {
+            progress: this.nowPlayingCache.progress_ms || 0,
+            duration: song.duration_ms,
+        };
         return div(
-            image("no_song.png").class("np-album"),
+            image(song.album.images[0].url).class("np-album"),
             div(
                 span("Now playing ♪").class("np-label"),
-                inlineHTML("<div class=\"np-song no-song\">afsdlkjfasdkfsdadsfjafsljdadfjs</div>"),
-                htmless.inlineComponent(() =>
-                    progressBar(0, 10)
-                ).id("time")
+                this.makeSongNameElement(song).class("np-song"),
+                htmless
+                    .inlineComponent(() =>
+                        this.progressBar(
+                            this.songPositionCache.progress,
+                            this.songPositionCache.duration
+                        )
+                    )
+                    .id("time")
             )
         ).class("np-widget");
     }
-    let song = nowPlaying.item!;
-    songProgress = {
-        progress: nowPlaying.progress_ms || 0,
-        duration: song.duration_ms,
-    };
-    return div(
-        image(song.album.images[0].url).class("np-album"),
-        div(
-            span("Now playing ♪").class("np-label"),
-            makeSongNameElement(song).class("np-song"),
-            htmless.inlineComponent(() =>
-                progressBar(songProgress.progress, songProgress.duration)
-            ).id("time")
-        )
-    ).class("np-widget");
 }
 
-function timeString(ms: number) {
-    let zeroPad = (n: number) => (n < 10 ? "0" + n : n.toString());
-    let s = Math.floor(ms / 1000);
-    let secs = s % 60;
-    let mins = Math.floor(s / 60);
-    return zeroPad(mins) + ":" + zeroPad(secs);
-}
-
-function progressBar(timePlayed: number, songLength: number) {
-    return span(
-        timeString(timePlayed),
-        div(
-            div()
-                .class("np-time-progress")
-                .style({ width: (timePlayed / songLength) * 100 + "%" })
-        ).class("np-time-bar")
-    ).class("np-time-span");
-}
+const si = new ServerInterface();
 
 async function main() {
     if (!(await si.amILoggedIn())) {
@@ -180,28 +222,8 @@ async function main() {
         return;
     }
 
-    nowPlaying = await si.nowPlaying();
-    document.body.appendChild(div(
-        htmless.inlineComponent(()=>nowPlayingWidget(nowPlaying)).id("now-playing")
-    ).render());
+    let songWidget = new SongWidget(si);
+    document.body.appendChild(div(songWidget).render());
 }
-
-setInterval(()=>{
-    /* Increment song progress client-side */
-    songProgress.progress+=500;
-
-    // prevent song bar from going past the end of the song;
-    if (songProgress.progress > songProgress.duration) {
-        songProgress.progress = songProgress.duration;
-    }
-    htmless.rerender("time");
-}, 500)
-
-
-setInterval(async ()=>{
-    /* Periodically refresh "now-playing" widget */
-    nowPlaying = await si.nowPlaying();
-    htmless.rerender("now-playing");
-}, 3000)
 
 main();
