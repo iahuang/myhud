@@ -116,16 +116,37 @@ define("ui/clock", ["require", "exports"], function (require, exports) {
     class ClockWidget extends Component {
         constructor() {
             super();
+            this.twelveHour = true; // ampm vs. 24 hour
             // update the clock every second
             setInterval(() => {
                 this.rerender();
             }, 1000);
         }
+        timeString() {
+            let zeroPad = (n) => (n < 10 ? "0" + n : n.toString());
+            let d = new Date();
+            if (this.twelveHour) {
+                let h = d.getHours() % 12;
+                if (h == 0) {
+                    h = 12;
+                }
+                let m = d.getMinutes();
+                return h + ":" + zeroPad(m);
+            }
+            else {
+                let h = d.getHours();
+                let m = d.getMinutes();
+                return zeroPad(h) + ":" + zeroPad(m);
+            }
+        }
+        setTwelveHour(to) {
+            this.twelveHour = to;
+            this.rerender();
+        }
         body() {
             let date = new Date();
             let h = date.getHours();
             let zeroPad = (n) => (n < 10 ? "0" + n : n.toString());
-            let m = zeroPad(date.getMinutes());
             const days = [
                 "Sunday",
                 "Monday",
@@ -150,11 +171,14 @@ define("ui/clock", ["require", "exports"], function (require, exports) {
                 "December",
             ];
             let dateString = `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}`;
-            let hh = h % 12;
-            if (hh == 0) {
-                hh = 12;
+            let ampm;
+            if (this.twelveHour) {
+                ampm = h >= 12 ? "PM" : "AM";
             }
-            return div(span(span(hh + ":" + m).class("cl-hm"), span(h >= 12 ? "PM" : "AM").class("cl-ampm")).class("cl-time"), span(dateString).class("cl-date")).class("clock");
+            else {
+                ampm = "";
+            }
+            return div(span(span(this.timeString()).class("cl-hm"), span(ampm).class("cl-ampm")).class("cl-time"), span(dateString).class("cl-date")).class("clock");
         }
     }
     exports.default = ClockWidget;
@@ -314,16 +338,53 @@ define("ui/settings", ["require", "exports", "ui/htmless_svg"], function (requir
             el.onClick(() => {
                 this.app.themeManager.setToTheme(theme.name);
                 this.rerender();
-            }).onEvent("mouseover", () => {
+            })
+                .onEvent("mouseover", () => {
                 this.tooltip.setText(theme.description);
                 this.tooltip.show();
-            }).onEvent("mouseleave", () => {
+            })
+                .onEvent("mouseleave", () => {
                 this.tooltip.hide();
             });
             return el;
         }
         body() {
             return div(...this.app.themeManager.themes.map((t) => this.listItem(t)));
+        }
+    }
+    class ToggleSwitch extends Component {
+        constructor(onStateChange, initialState = false) {
+            super();
+            this.onStateChange = onStateChange;
+            this.state = initialState;
+        }
+        _setState(to) {
+            if (this.state === to) {
+                return;
+            }
+            this.state = to;
+            this.onStateChange(to);
+            this.rerender();
+        }
+        on() {
+            this._setState(true);
+        }
+        off() {
+            this._setState(false);
+        }
+        toggle() {
+            this._setState(!this.state);
+        }
+        body() {
+            return div(div()
+                .class("st-toggle-sw")
+                .style({
+                left: this.state ? "18pt" : "0pt",
+            }))
+                .class("st-toggle")
+                .onClick(() => {
+                this.toggle();
+            });
         }
     }
     class Tooltip {
@@ -369,7 +430,13 @@ define("ui/settings", ["require", "exports", "ui/htmless_svg"], function (requir
         }
         themeSelection() { }
         renderMenu() {
-            return div(this.menuHeader("Theme"), new ThemeSelector(this.app, this.tooltip))
+            let clock = this.app.clock;
+            return div(this.menuHeader("Theme"), new ThemeSelector(this.app, this.tooltip), this.menuHeader("Clock"), span(inlineComponent(() => {
+                return div(clock.twelveHour ? "12 Hour" : "24 Hour");
+            }).id("st-cl-mode"), new ToggleSwitch((to) => {
+                clock.setTwelveHour(!to);
+                htmless.rerender("st-cl-mode");
+            }, !clock.twelveHour)).class("st-row"))
                 .class("st-menu")
                 .onEvent("click", (ev) => {
                 ev.stopPropagation();
@@ -630,13 +697,16 @@ define("ui/theme/blossom", ["require", "exports", "ui/base_theme"], function (re
             const termvel = 200;
             this.swapLayers();
             // draw background
+            const offsetScale = 0.2;
+            let b = this.canvas.height * offsetScale;
             this.ctx.fillStyle = "#e2e6ec";
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             this.ctx.fillStyle = "#1e2029";
             this.drawPolygon([
+                new Vector(0, this.canvas.height - b),
                 new Vector(0, this.canvas.height),
                 new Vector(this.canvas.width, this.canvas.height),
-                new Vector(this.canvas.width, 0),
+                new Vector(this.canvas.width + b, 0),
             ]);
             let p = this.deltaTime * this.petalSpawnRate;
             while (Math.random() < p) {
@@ -1067,13 +1137,24 @@ define("index", ["require", "exports", "headless_server_interface", "server_inte
     const GIT_LOGO = `<svg class="octocat" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32.58 31.77"><defs><style>.cls-1{fill-rule:evenodd;}</style></defs><title>Asset 1</title><g id="Layer_2" data-name="Layer 2"><g id="Layer_1-2" data-name="Layer 1"><path class="cls-1" d="M16.29,0a16.29,16.29,0,0,0-5.15,31.75c.82.15,1.11-.36,1.11-.79s0-1.41,0-2.77C7.7,29.18,6.74,26,6.74,26a4.36,4.36,0,0,0-1.81-2.39c-1.47-1,.12-1,.12-1a3.43,3.43,0,0,1,2.49,1.68,3.48,3.48,0,0,0,4.74,1.36,3.46,3.46,0,0,1,1-2.18c-3.62-.41-7.42-1.81-7.42-8a6.3,6.3,0,0,1,1.67-4.37,5.94,5.94,0,0,1,.16-4.31s1.37-.44,4.48,1.67a15.41,15.41,0,0,1,8.16,0c3.11-2.11,4.47-1.67,4.47-1.67A5.91,5.91,0,0,1,25,11.07a6.3,6.3,0,0,1,1.67,4.37c0,6.26-3.81,7.63-7.44,8a3.85,3.85,0,0,1,1.11,3c0,2.18,0,3.94,0,4.47s.29.94,1.12.78A16.29,16.29,0,0,0,16.29,0Z"/></g></g></svg>`;
     class Application {
         constructor() {
+            /*
+                If you want to run the webapp without self-hosting a server you can.
+                There is a version of the server communications object (server_interface.ServerInterface)
+                that pretends to talk to the server, while not actually querying anything behind
+                the scenes.
+    
+                For more information, see the README.md
+            */
             if (window.MYHUD_STATIC) {
                 this.serverInterface = new headless_server_interface_1.default();
+                this.isStatic = true;
             }
             else {
                 this.serverInterface = new server_interface_1.default();
+                this.isStatic = false;
             }
             this.themeManager = new theme_manager_1.default("Default");
+            this.clock = new clock_1.default();
         }
         main() {
             return __awaiter(this, void 0, void 0, function* () {
@@ -1093,7 +1174,7 @@ define("index", ["require", "exports", "headless_server_interface", "server_inte
                         console.error(`${err.name}, ${err.message}`);
                     }
                 }
-                document.body.appendChild(div(div(span(new clock_1.default(), new spotify_widget_1.default(this.serverInterface)).class("row")).class("v-center"), div(hyperlink(inlineHTML(GIT_LOGO)).href("https://github.com/iahuang/myhud"), new settings_1.default(this), new news_1.default(this.serverInterface)).class("overlay")).render());
+                document.body.appendChild(div(div(span(this.clock, new spotify_widget_1.default(this.serverInterface)).class("row")).class("v-center"), div(hyperlink(inlineHTML(GIT_LOGO)).href("https://github.com/iahuang/myhud"), new settings_1.default(this), new news_1.default(this.serverInterface)).class("overlay")).render());
             });
         }
     }
