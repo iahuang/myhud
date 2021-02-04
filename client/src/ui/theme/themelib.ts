@@ -2,6 +2,40 @@
 
 import { Theme } from "../theme";
 
+export class Vector {
+    x: number;
+    y: number;
+
+    constructor(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+    }
+    expand(): [number, number] {
+        return [this.x, this.y];
+    }
+    get magnitude() {
+        return Math.sqrt(this.x*this.x + this.y*this.y);
+    }
+    get normalized() {
+        return this.times(1/this.magnitude);
+    }
+    plus(other: Vector) {
+        return new Vector(this.x + other.x, this.y + other.y);
+    }
+    minus(other: Vector) {
+        return new Vector(this.x - other.x, this.y - other.y);
+    }
+    times(other: Vector | number) {
+        if (typeof other === 'number') {
+            return new Vector(this.x * other, this.y * other);
+        }
+        return new Vector(this.x * other.x, this.y * other.y);
+    }
+    static get zero() {
+        return new Vector(0, 0);
+    }
+}
+
 export class HUDCanvas {
     /*
         A canvas object that automatically resizes to fit the window.

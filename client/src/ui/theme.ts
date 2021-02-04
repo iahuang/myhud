@@ -59,12 +59,12 @@ export class SiteThemeManager {
 
 class DefaultTheme extends Theme {
     constructor() {
-        super({ stylesheet: "theme_dark.css" });
+        super({ stylesheet: "css/theme_dark.css" });
     }
 }
 
 class Theme_Pink extends Theme {
     constructor() {
-        super({ stylesheet: "theme_pink.css" });
+        super({ stylesheet: "css/theme_pink.css" });
     }
 }

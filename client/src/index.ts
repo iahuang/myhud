@@ -6,6 +6,7 @@
 import ServerInterface from "./server_interface";
 import ClockWidget from "./ui/clock";
 import NewsWidget from "./ui/news";
+import SettingsWidget from "./ui/settings";
 import SongWidget from "./ui/spotify_widget";
 import { SiteThemeManager } from "./ui/theme";
 import Blossom from "./ui/theme/blossom";
@@ -60,6 +61,7 @@ async function main() {
                 hyperlink(inlineHTML(GIT_LOGO)).href(
                     "https://github.com/iahuang/myhud"
                 ),
+                new SettingsWidget(),
                 newsWidget
             ).class("overlay")
         ).render()

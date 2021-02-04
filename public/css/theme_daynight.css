@@ -1,0 +1,12 @@
+:root {
+    --text2: white;
+}
+
+.np-album {
+    opacity: 0.7;
+    transition: 0.3s;
+}
+
+.np-album:hover {
+    opacity: 1;
+}

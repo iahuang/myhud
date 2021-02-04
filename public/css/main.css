@@ -149,7 +149,7 @@ a:visited {
 .news-widget {
     position: absolute;
     bottom: 0;
-    padding: 100px;
+    margin: 100px;
     opacity: 60%;
     transition: 0.5s;
 }
@@ -169,4 +169,15 @@ a:visited {
     flex-direction: row;
     align-items: flex-end;
     justify-content: left;
+}
+
+.settings-icon {
+    position: absolute;
+    stroke: var(--text2);
+    left: 0;
+    top: 0;
+    cursor: pointer;
+    margin: 10px;
+    width: 48px;
+    height: auto;
 }

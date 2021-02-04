@@ -3,8 +3,16 @@
 A webapp for spicing up your second monitor or device.
 Basically a really cool looking digital clock.
 
+### Screenshots
+
 ![Screenshot](https://github.com/iahuang/myhud/raw/main/readme_assets/screenshot.png)
 *Animated Blossom Theme*
+
+![Screenshot](https://github.com/iahuang/myhud/raw/main/readme_assets/cycle_day.png)
+*Dynamic Day/Night Theme (morning)*
+
+![Screenshot](https://github.com/iahuang/myhud/raw/main/readme_assets/cycle_night.png)
+*Dynamic Day/Night Theme (very late at night)*
 
 ## Getting Started
 

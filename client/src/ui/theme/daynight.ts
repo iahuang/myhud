@@ -163,7 +163,7 @@ export default class DayNight extends Theme {
     animInterval: number | null = null;
     _n = 0;
     constructor() {
-        super({});
+        super({stylesheet: "css/theme_daynight.css"});
     }
 
     onLoad() {

@@ -51,7 +51,7 @@ export default class ServerInterface {
         });
     }
 
-    async serverGet(endpoint: string, params?: any) {
+    private async serverGet(endpoint: string, params?: any) {
         let resp = await fetch(
             "http://" +
                 window.location.host +

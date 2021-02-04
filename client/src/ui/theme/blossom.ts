@@ -113,7 +113,7 @@ export default class Blossom extends Theme {
     }
 
     constructor() {
-        super({ stylesheet: "theme_bw.css" });
+        super({ stylesheet: "css/theme_bw.css" });
 
         this.currentLayer = "front";
 
