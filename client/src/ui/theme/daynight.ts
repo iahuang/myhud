@@ -3,7 +3,7 @@
     Imported from a previous project of mine called "clockbook"
 */
 
-import { Theme } from "../theme";
+import { Theme } from "../base_theme";
 import { Color } from "./color";
 
 function timeMark(hour: number, min: number) {
@@ -175,6 +175,7 @@ export default class DayNight extends Theme {
         this.updateColors();
     }
 
+
     updateColors() {
         let now = new Date();
         let timeValue = timeMark(now.getHours(), now.getMinutes());
@@ -190,5 +191,10 @@ export default class DayNight extends Theme {
     onUnload() {
         // stop animation loop
         window.clearInterval(this.animInterval!);
+        document.body.style.background = "";
+        let clock = document.getElementsByClassName("row")[0] as HTMLElement;
+        if (clock) {
+            clock.style.color = "";
+        }
     }
 }

@@ -57,4 +57,4 @@ To run the server; navigate to `localhost:3000` (or a different port if specifie
 
 ## Compatibility
 
-This app has been tested on Chromium based browsers, (Google Chrome, Opera, Edge, etc.), and Firefox. For best results, use the latest version of your web browser.
+This app has been tested on Chromium based browsers, (Google Chrome, Opera, Edge, etc.), and Firefox. For best results, use the latest version of your web browser. Just for fun, I tested this app on IE11 (it didn't load)

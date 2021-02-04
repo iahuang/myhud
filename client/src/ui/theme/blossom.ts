@@ -2,7 +2,7 @@
     A theme designed after the Life/Death Wallpaper Engine Theme
 */
 
-import { Theme } from "../theme";
+import { Theme } from "../base_theme";
 
 function randomNumber(min: number, max: number) {
     return Math.random() * (max - min) + min;
@@ -194,7 +194,7 @@ export default class Blossom extends Theme {
             this.ctx.rotate(petal.roll);
             this.ctx.scale(1, 0.7 * Math.sin(petal.pitch));
             this.ctx.scale(1 / petal.z, 1 / petal.z);
-            this.ctx.arc(0, 0, 10, 0, twopi);
+            this.ctx.arc(0, 0, 6, 0, twopi);
             this.ctx.resetTransform();
             this.ctx.fill();
 

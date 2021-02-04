@@ -1,3 +1,4 @@
+import Application from "src/index";
 import svg from "./htmless_svg";
 
 const icon = `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-settings" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#2c3e50" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -6,11 +7,139 @@ const icon = `<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler ic
 <circle cx="12" cy="12" r="3" />
 </svg>`;
 
-export default class SettingsWidget extends Component {
-    renderButton() {
-        return div(svg(icon).class('settings-icon')).onClick(()=>{alert("a")});
+interface ThemeOption {
+    name: string;
+    themeObjectType: any;
+    description: string;
+    background?: string;
+}
+
+class ThemeSelector extends Component {
+    app: Application;
+    tooltip: Tooltip;
+
+    constructor(app: Application, tooltip: Tooltip) {
+        super();
+        this.app = app;
+        this.tooltip = tooltip;
     }
+
+    get currentlySelected() {
+        return this.app.themeManager.currentThemeName;
+    }
+
+    listItem(theme: ThemeOption) {
+        let el = div(theme.name).class("st-theme-item");
+        if (theme.name === this.currentlySelected) {
+            el.class("st-theme-selected");
+        }
+
+        el.onClick(() => {
+            this.app.themeManager.setToTheme(theme.name);
+            this.rerender();
+        }).onEvent("mouseover", () => {
+            this.tooltip.setText(theme.description)
+            this.tooltip.show();
+        }).onEvent("mouseleave", () => {
+            this.tooltip.hide();
+        });
+
+        return el;
+    }
+
     body() {
-        return this.renderButton();
+        return div(
+            ...this.app.themeManager.themes.map((t) => this.listItem(t))
+        );
+    }
+}
+
+class Tooltip {
+    /* A class for creating tooltips */
+    private _element: HTMLElement;
+
+    constructor() {
+        this._element = this._createElement();
+        this._element.style.position = "absolute";
+        this._element.style.pointerEvents = "none";
+        document.body.appendChild(this._element);
+        window.addEventListener("mousemove", (ev) => {
+            let mouseEvent = ev as MouseEvent;
+            this._element.style.transform = `translate(${ev.pageX}px, ${ev.pageY}px)`;
+        });
+    }
+
+    setText(text: string) {
+        this._element.innerText = text;
+    }
+
+    hide() {
+        this._element.style.display = "none";
+    }
+
+    show() {
+        this._element.style.display = "initial";
+    }
+
+    private _createElement() {
+        return div().id("st-tooltip").render();
+    }
+}
+
+export default class SettingsWidget extends Component {
+    menuOpen = false;
+    app: Application;
+    tooltip: Tooltip;
+
+    constructor(app: Application) {
+        super();
+        this.app = app;
+        this.tooltip = new Tooltip();
+        this.tooltip.hide();
+        this.tooltip.setText("tooltip");
+    }
+
+    renderButton() {
+        return div(svg(icon).class("settings-icon")).onClick(() => {
+            this.openMenu();
+        });
+    }
+
+    menuHeader(text: string) {
+        return div(span(text).class("st-header"), hr);
+    }
+
+    themeSelection() {}
+
+    renderMenu() {
+        return div(
+            this.menuHeader("Theme"),
+            new ThemeSelector(this.app, this.tooltip)
+        )
+            .class("st-menu")
+            .onEvent("click", (ev) => {
+                ev.stopPropagation();
+            });
+    }
+
+    openMenu() {
+        this.menuOpen = true;
+        this.rerender();
+    }
+
+    closeMenu() {
+        this.menuOpen = false;
+        this.rerender();
+    }
+
+    body() {
+        if (this.menuOpen) {
+            return div(this.renderMenu())
+                .class("st-close-overlay")
+                .onEvent("click", () => {
+                    this.closeMenu();
+                });
+        }
+        return div(this.renderButton());
     }
 }

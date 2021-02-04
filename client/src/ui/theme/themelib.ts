@@ -1,6 +1,6 @@
 /* A mini-library that assists in the creation of MyHUD themes */
 
-import { Theme } from "../theme";
+import { Theme } from "../base_theme";
 
 export class Vector {
     x: number;

@@ -40,7 +40,8 @@ export default class SongWidget extends Component {
         setInterval(async () => {
             /* Periodically refresh "now-playing" widget */
             this.nowPlayingCache = await this.serverInterface.nowPlaying();
-            htmless.rerender(this);
+            this.rerender();
+            document.title = this.makePageTitle(this.nowPlayingCache?.item);
         }, 3000);
     }
 
@@ -60,6 +61,13 @@ export default class SongWidget extends Component {
             return name.substring(0, maxLength - 3) + "...";
         }
         return name;
+    }
+
+    makePageTitle(song: SpotifyApi.TrackObjectFull | null | undefined) {
+        if (!song) {
+            return "MyHUD";
+        }
+        return song.artists[0].name+" - "+song.name+" (MyHUD)";
     }
 
     makeSongNameElement(song: SpotifyApi.TrackObjectFull) {
