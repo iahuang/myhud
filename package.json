@@ -16,5 +16,8 @@
     },
     "scripts": {
         "start": "node build/main.js"
+    },
+    "devDependencies": {
+        "fs-extra": "^9.1.0"
     }
 }

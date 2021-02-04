@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@200;400;500&display=swap');
+
+:root {
+    --bw_white: #e2e6ec;
+    --bw_black: #1e2029;
+    --bw_grey: #3f434e;
+
+    --text2: #b7c0d1;
+}
+
+body {
+    font-family: 'Raleway', sans-serif;
+}
+
+.clock {
+    font-family: 'Raleway', sans-serif;
+    color: var(--bw_grey);
+    opacity: 1;
+}
+
+.cl-hm {
+    font-family: 'Raleway', sans-serif;
+}
+
+/* theme classes */
+
+.bw-canv {
+    top: 0;
+    left: 0;
+    position: absolute;
+    z-index: -100;
+}
+
+.front {
+    z-index: 100;
+    pointer-events: none;
+}
+
+.np-album {
+    opacity: 70%;
+}

@@ -2,6 +2,7 @@
     This webapp uses a homemade HTML library called htmless, which you can find here: https://github.com/iahuang/htmless
 */
 
+import HeadlessServerInterface from "./headless_server_interface";
 import ServerInterface from "./server_interface";
 import ClockWidget from "./ui/clock";
 import NewsWidget from "./ui/news";
@@ -16,12 +17,23 @@ const GIT_LOGO = `<svg class="octocat" xmlns="http://www.w3.org/2000/svg" viewBo
 
 // MAIN
 
+declare global {
+    interface Window {
+        MYHUD_STATIC?: boolean;
+    }
+}
+
 export default class Application {
-    serverInterface: ServerInterface;
+    serverInterface: ServerInterface | HeadlessServerInterface;
     themeManager: SiteThemeManager;
 
     constructor() {
-        this.serverInterface = new ServerInterface();
+        if (window.MYHUD_STATIC) {
+            this.serverInterface = new HeadlessServerInterface();
+        } else {
+            this.serverInterface = new ServerInterface();
+        }
+        
         this.themeManager = new SiteThemeManager("Default");
     }
 
@@ -60,7 +72,7 @@ export default class Application {
                 div(
                     span(
                         new ClockWidget(),
-                        new SongWidget(this.serverInterface)
+                        new SongWidget(this.serverInterface as ServerInterface)
                     ).class("row")
                 ).class("v-center"),
                 div(
@@ -68,7 +80,7 @@ export default class Application {
                         "https://github.com/iahuang/myhud"
                     ),
                     new SettingsWidget(this),
-                    new NewsWidget(this.serverInterface)
+                    new NewsWidget(this.serverInterface as ServerInterface)
                 ).class("overlay")
             ).render()
         );
