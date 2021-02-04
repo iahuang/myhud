@@ -31,6 +31,10 @@ body {
     z-index: -100;
 }
 
+.front {
+    z-index: 100;
+}
+
 .np-album {
     opacity: 70%;
 }

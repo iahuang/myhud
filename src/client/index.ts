@@ -485,9 +485,6 @@ namespace BWTheme {
     }
 
     export class Theme_BW extends Theme {
-        canvas: HTMLCanvasElement;
-        ctx: CanvasRenderingContext2D;
-
         petals: FlowerPetal[];
 
         // Base framerate setting
@@ -508,20 +505,54 @@ namespace BWTheme {
 
         treeImage: HTMLImageElement;
 
+        initCanvas(front: boolean) {
+            let canvas = document.createElement("canvas");
+            canvas.className = "bw-canv";
+            if (front) {
+                canvas.classList.add("front");
+            }
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            window.addEventListener('resize', ()=>{
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            })
+
+            return canvas;
+        }
+
+        deinitCanvas(canvas: HTMLCanvasElement) {
+            canvas.parentElement?.removeChild(canvas);
+        }
+
+        frontCanvas: HTMLCanvasElement;
+        backCanvas: HTMLCanvasElement;
+
+        currentLayer: string;
+
+        get canvas() {
+            if (this.currentLayer === "front") {
+                return this.frontCanvas;
+            }
+            return this.backCanvas;
+        }
+
+        get ctx() {
+            return this.canvas.getContext("2d")!;
+        }
+
+        swapLayers() {
+            this.currentLayer = this.currentLayer === "front" ? "back" : "front";
+        }
+
         constructor() {
             super({ stylesheet: "theme_bw.css" });
 
-            this.canvas = document.createElement("canvas");
-            this.canvas.className = "bw-canv";
-            this.canvas.width = window.innerWidth;
-            this.canvas.height = window.innerHeight;
+            this.currentLayer = "front";
 
-            window.addEventListener('resize', ()=>{
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-            })
-
-            this.ctx = this.canvas.getContext("2d")!;
+            this.frontCanvas = this.initCanvas(true);
+            this.backCanvas = this.initCanvas(false);
 
             if (this.ctx === null) {
                 console.error("Canvas not supported");
@@ -529,17 +560,14 @@ namespace BWTheme {
 
             this.petals = [];
 
-            for (let i = 0; i < 20; i++) {
-                this.addPetal();
-            }
-
             this.treeImage = new Image();
             this.treeImage.src = "bw_blossom.png";
 
         }
 
         onLoad() {
-            document.body.appendChild(this.canvas);
+            document.body.appendChild(this.frontCanvas);
+            document.body.appendChild(this.backCanvas);
             this.frame();
 
             this.animInterval = window.setInterval(() => {
@@ -562,6 +590,8 @@ namespace BWTheme {
             const dragcoeff = 20;
             const accel = 100;
             const termvel = 200;
+
+            this.swapLayers();
 
             // draw background
             this.ctx.fillStyle = "#e2e6ec";
@@ -587,6 +617,10 @@ namespace BWTheme {
                 this.canvas.height - this.treeImage.height
             );
             this.ctx.globalAlpha = 1;
+
+            this.swapLayers();
+
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
             // draw petals
             for (let petal of this.petals) {
@@ -643,7 +677,8 @@ namespace BWTheme {
 
         onUnload() {
             // remove canvas
-            this.canvas.parentElement?.removeChild(this.canvas);
+            this.canvas.parentElement?.removeChild(this.backCanvas);
+            this.canvas.parentElement?.removeChild(this.frontCanvas);
             window.clearInterval(this.animInterval!);
         }
     }
