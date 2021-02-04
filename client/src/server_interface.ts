@@ -1,3 +1,7 @@
+/*
+    A simple interface for communicating with the hosting server
+*/
+
 /// <reference types="../../node_modules/@types/spotify-api" />
 
 type WsListenerCallback = (data: any) => void;
