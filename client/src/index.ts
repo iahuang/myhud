@@ -24,12 +24,20 @@ declare global {
 }
 
 export default class Application {
-    serverInterface: ServerInterface | HeadlessServerInterface;
+    serverInterface: ServerInterface;
     themeManager: SiteThemeManager;
 
     constructor() {
+        /*
+            If you want to run the webapp without self-hosting a server you can.
+            There is a version of the server communications object (server_interface.ServerInterface)
+            that pretends to talk to the server, while not actually querying anything behind
+            the scenes.
+
+            For more information, see the README.md
+        */
         if (window.MYHUD_STATIC) {
-            this.serverInterface = new HeadlessServerInterface();
+            this.serverInterface = (new HeadlessServerInterface() as unknown) as ServerInterface;
         } else {
             this.serverInterface = new ServerInterface();
         }
@@ -72,7 +80,7 @@ export default class Application {
                 div(
                     span(
                         new ClockWidget(),
-                        new SongWidget(this.serverInterface as ServerInterface)
+                        new SongWidget(this.serverInterface)
                     ).class("row")
                 ).class("v-center"),
                 div(
@@ -80,7 +88,7 @@ export default class Application {
                         "https://github.com/iahuang/myhud"
                     ),
                     new SettingsWidget(this),
-                    new NewsWidget(this.serverInterface as ServerInterface)
+                    new NewsWidget(this.serverInterface)
                 ).class("overlay")
             ).render()
         );
