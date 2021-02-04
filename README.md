@@ -3,7 +3,7 @@
 A webapp for spicing up your second monitor or device.
 Basically a really cool looking digital clock.
 
-### Screenshots
+### Features
 - Spotify integration shows what song you're listening to
 - Displays live headlines from the Washington Post so you can watch the world burn in real time!
 - Customizable interface with a wide variety of themes
@@ -18,6 +18,14 @@ Basically a really cool looking digital clock.
 
 ![Screenshot](https://github.com/iahuang/myhud/raw/main/readme_assets/cycle_evening.png)
 *Dynamic Day/Night Theme (very late at night)*
+
+## Static Demo
+
+This webapp requires a locally-hosted server for full functionality, but there's a static version here: **[Live Demo](https://iahuang.github.io/myhud)**
+
+Notes:
+- Internally, the static version of the webapp uses an object that pretends to be a connection to the server. Any features that would normally use the server will be non-functional and potentially buggy.
+- To force the webapp to use a "headless" connection, set `window.MYHUD_STATIC=true` before loading the bundle.
 
 ## Getting Started
 
