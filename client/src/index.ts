@@ -26,6 +26,7 @@ declare global {
 export default class Application {
     serverInterface: ServerInterface;
     themeManager: SiteThemeManager;
+    clock: ClockWidget;
     isStatic: boolean;
 
     constructor() {
@@ -46,6 +47,7 @@ export default class Application {
         }
         
         this.themeManager = new SiteThemeManager("Default");
+        this.clock = new ClockWidget();
     }
 
     async main() {
@@ -82,7 +84,7 @@ export default class Application {
             div(
                 div(
                     span(
-                        new ClockWidget(),
+                        this.clock,
                         new SongWidget(this.serverInterface)
                     ).class("row")
                 ).class("v-center"),

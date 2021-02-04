@@ -37,12 +37,14 @@ class ThemeSelector extends Component {
         el.onClick(() => {
             this.app.themeManager.setToTheme(theme.name);
             this.rerender();
-        }).onEvent("mouseover", () => {
-            this.tooltip.setText(theme.description)
-            this.tooltip.show();
-        }).onEvent("mouseleave", () => {
-            this.tooltip.hide();
-        });
+        })
+            .onEvent("mouseover", () => {
+                this.tooltip.setText(theme.description);
+                this.tooltip.show();
+            })
+            .onEvent("mouseleave", () => {
+                this.tooltip.hide();
+            });
 
         return el;
     }
@@ -51,6 +53,53 @@ class ThemeSelector extends Component {
         return div(
             ...this.app.themeManager.themes.map((t) => this.listItem(t))
         );
+    }
+}
+
+type ToggleCallback = (state: boolean) => void;
+
+class ToggleSwitch extends Component {
+    state: boolean;
+    onStateChange: ToggleCallback;
+    constructor(onStateChange: ToggleCallback, initialState: boolean = false) {
+        super();
+        this.onStateChange = onStateChange;
+        this.state = initialState;
+    }
+
+    private _setState(to: boolean) {
+        if (this.state === to) {
+            return;
+        }
+        this.state = to;
+        this.onStateChange(to);
+        this.rerender();
+    }
+
+    on() {
+        this._setState(true);
+    }
+
+    off() {
+        this._setState(false);
+    }
+
+    toggle() {
+        this._setState(!this.state);
+    }
+
+    body() {
+        return div(
+            div()
+                .class("st-toggle-sw")
+                .style({
+                    left: this.state ? "18pt" : "0pt",
+                })
+        )
+            .class("st-toggle")
+            .onClick(() => {
+                this.toggle();
+            });
     }
 }
 
@@ -112,9 +161,21 @@ export default class SettingsWidget extends Component {
     themeSelection() {}
 
     renderMenu() {
+        let clock = this.app.clock;
+
         return div(
             this.menuHeader("Theme"),
-            new ThemeSelector(this.app, this.tooltip)
+            new ThemeSelector(this.app, this.tooltip),
+            this.menuHeader("Clock"),
+            span(
+                inlineComponent(()=>{
+                    return div(clock.twelveHour ? "12 Hour" : "24 Hour")
+                }).id("st-cl-mode"),
+                new ToggleSwitch((to) => {
+                    clock.setTwelveHour(!to);
+                    htmless.rerender("st-cl-mode");
+                }, !clock.twelveHour)
+            ).class("st-row")
         )
             .class("st-menu")
             .onEvent("click", (ev) => {

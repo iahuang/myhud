@@ -243,3 +243,29 @@ hr {
     z-index: 10;
     color: rgba(231, 233, 236, 0.836);
 }
+
+.st-toggle {
+    border: 1px solid rgba(255, 255, 255, 0.473);
+    border-radius: 12pt;
+    background-color: rgba(0, 0, 0, 0.322);
+    width: 36pt;
+    height: 18pt;
+    cursor: pointer;
+    
+}
+
+.st-toggle-sw {
+    position: relative;
+    height: 18pt;
+    width: 18pt;
+    border-radius: 100%;
+    background-color: rgba(255, 255, 255, 0.8);
+    
+}
+
+.st-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
