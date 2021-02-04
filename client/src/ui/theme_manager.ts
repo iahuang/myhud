@@ -36,7 +36,7 @@ export default class SiteThemeManager {
             {
                 name: "Day/Night Cycle",
                 themeObjectType: DayNight,
-                description: "A theme that changes colors over the course of the day",
+                description: "A theme that slowly changes colors over the course of the day",
             },
         ];
         this._themeInstance = this.instantiateTheme(initialTheme);
