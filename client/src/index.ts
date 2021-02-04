@@ -9,6 +9,7 @@ import NewsWidget from "./ui/news";
 import SongWidget from "./ui/spotify_widget";
 import { SiteThemeManager } from "./ui/theme";
 import Blossom from "./ui/theme/blossom";
+import DayNight from "./ui/theme/daynight";
 
 // ASSETS
 
@@ -18,7 +19,7 @@ const GIT_LOGO = `<svg class="octocat" xmlns="http://www.w3.org/2000/svg" viewBo
 
 async function main() {
     const si = new ServerInterface();
-    const site = new SiteThemeManager(new Blossom());
+    const site = new SiteThemeManager(new DayNight());
 
     // DEBUG: link si and site instances to window
     (window as any).si = si;
