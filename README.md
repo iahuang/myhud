@@ -11,7 +11,7 @@ Basically a really cool looking digital clock.
 ![Screenshot](https://github.com/iahuang/myhud/raw/main/readme_assets/cycle_day.png)
 *Dynamic Day/Night Theme (morning)*
 
-![Screenshot](https://github.com/iahuang/myhud/raw/main/readme_assets/cycle_night.png)
+![Screenshot](https://github.com/iahuang/myhud/raw/main/readme_assets/cycle_evening.png)
 *Dynamic Day/Night Theme (very late at night)*
 
 ## Getting Started
