@@ -158,13 +158,18 @@ export default class Blossom extends Theme {
         this.swapLayers();
 
         // draw background
+        const offsetScale = 0.2;
+        
+        let b = this.canvas.height*offsetScale;
+        
         this.ctx.fillStyle = "#e2e6ec";
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = "#1e2029";
         this.drawPolygon([
+            new Vector(0, this.canvas.height-b),
             new Vector(0, this.canvas.height),
             new Vector(this.canvas.width, this.canvas.height),
-            new Vector(this.canvas.width, 0),
+            new Vector(this.canvas.width+b, 0),
         ]);
 
         let p = this.deltaTime * this.petalSpawnRate;

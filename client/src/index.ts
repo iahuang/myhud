@@ -26,6 +26,7 @@ declare global {
 export default class Application {
     serverInterface: ServerInterface;
     themeManager: SiteThemeManager;
+    isStatic: boolean;
 
     constructor() {
         /*
@@ -38,8 +39,10 @@ export default class Application {
         */
         if (window.MYHUD_STATIC) {
             this.serverInterface = (new HeadlessServerInterface() as unknown) as ServerInterface;
+            this.isStatic = true;
         } else {
             this.serverInterface = new ServerInterface();
+            this.isStatic = false;
         }
         
         this.themeManager = new SiteThemeManager("Default");
