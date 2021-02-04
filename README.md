@@ -36,7 +36,10 @@ The server will create a configuration file for you to fill out. Open `config.js
 
 Depending on where you're hosting from, (i.e. `localhost:3000`, `192.168.x.y`, etc.), you will need to register these addresses with Spotify in order for authentication to work. Navigate to your Spotify Developer dashboard, and under your app's settings, add the necessary redirect URIs. Here is an example (make sure these match the host address exactly, including protocol, trailing slashes, etc.)
 
+Make sure you put `/callback` at the end, as this is where the server will look for the response from Spotify's authentication servers.
+
 ![Screenshot](https://github.com/iahuang/myhud/raw/main/readme_assets/spotify_reg_guide.png)
+*Example from my Spotify Application*
 
 ### All Set
 ```
